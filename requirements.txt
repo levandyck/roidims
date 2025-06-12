@@ -1,0 +1,21 @@
+clip @ git+https://github.com/openai/CLIP.git@dcba3cb2e2827b402d2701e7e1c7d9fed8a20ef1
+fracridge==2.0
+h5py
+matplotlib
+nibabel
+nimfa==1.4.0
+numpy
+pandas
+pathlib
+Pillow
+scikit-image
+scikit-learn
+scikit-learn-extra
+scipy
+seaborn
+setuptools-scm
+statsmodels
+torch
+torchvision
+tqdm
+wordcloud
