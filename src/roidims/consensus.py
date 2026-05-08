@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity, cosine_distances
-from sklearn_extra.cluster import KMedoids
 from sklearn.metrics import silhouette_score
+from sklearn_extra.cluster import KMedoids
 
 from roidims.utils import (
     SubjectLoader,
     compute_evar_all,
-    update_npz
+    update_npz,
 )
 
 # ----------------- Aggregate randomly initialized BNMF runs ----------------- #
@@ -31,9 +31,11 @@ def remove_outliers(spectra: pd.DataFrame, n_dims: int, local_neighborhood_size:
 
     # Calculate mean distance to nearest neighbors
     distance_to_nearest_neighbors = dist[np.arange(dist.shape[0])[:, None], partitioning_order]
-    local_density = pd.DataFrame(distance_to_nearest_neighbors.sum(1) / n_neighbors,
-                                columns=["local_density"],
-                                index=spectra.index)
+    local_density = pd.DataFrame(
+        distance_to_nearest_neighbors.sum(1) / n_neighbors,
+        columns=["local_density"],
+        index=spectra.index
+    )
 
     # Set top 5th percentile as outlier threshold
     density_threshold = np.percentile(local_density.values[:, 0], 95)
@@ -47,7 +49,11 @@ def remove_outliers(spectra: pd.DataFrame, n_dims: int, local_neighborhood_size:
 
 def perform_kmedoids(spectra_filt: pd.DataFrame, n_dims: int):
     """Perform k-medoids clustering."""
-    kmedoids = KMedoids(n_clusters=n_dims, metric="cosine", method="pam", init="k-medoids++", max_iter=500)
+    kmedoids = KMedoids(
+        n_clusters=n_dims, metric="cosine",
+        method="pam", init="k-medoids++",
+        max_iter=500
+    )
     kmedoids.fit(spectra_filt)
     silhouette = silhouette_score(spectra_filt.values, kmedoids.labels_, metric="cosine")
     print(f"Silhouette score = {silhouette}")

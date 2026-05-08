@@ -212,7 +212,7 @@ def compute_evar_unique(V: np.ndarray, W: np.ndarray, H: np.ndarray, d: int, eva
 
 
 # --------------------------------- Plotting --------------------------------- #
-def truncate_cmap(cmap, min_val=0.0, max_val=1.0):
+def truncate_cmap(cmap, min_val: float=0.0, max_val: float=1.0):
     n_colors = cmap.N // 2
     cmap_trunc = mcolors.LinearSegmentedColormap.from_list(
         "truncated({},{:.2f},{:.2f})".format(cmap.name, min_val, max_val),
@@ -220,7 +220,7 @@ def truncate_cmap(cmap, min_val=0.0, max_val=1.0):
     )
     return cmap_trunc
 
-def cmap_thresh_div(cmap, threshold=None):
+def cmap_thresh_div(cmap, threshold: float=None):
     colors = cmap(np.linspace(0, 1, 500))
     if threshold is not None:
         alpha_values = np.ones(len(colors))
@@ -231,7 +231,7 @@ def cmap_thresh_div(cmap, threshold=None):
         colors[:, -1] = alpha_values
     return mcolors.ListedColormap(colors)
 
-def zoom_to_roi_combined(subject, roi):
+def zoom_to_roi_combined(subject: str, roi: str):
     roi_verts = cortex.get_roi_verts(subject, roi)[roi]
     roi_map = cortex.Vertex.empty(subject)
     roi_map.data[roi_verts] = 1
@@ -243,7 +243,7 @@ def zoom_to_roi_combined(subject, roi):
     xmax, ymax = all_roi_pts.max(0)
     plt.axis([xmin, xmax, ymin, ymax])
 
-def create_collage(imgs, size):
+def create_collage(imgs: np.ndarray, size: tuple):
     collage = np.zeros((size[0] * imgs[0].shape[0], size[1] * imgs[0].shape[1], 3))
     for j in range(size[1]):
         for i in range(size[0]):
@@ -254,7 +254,7 @@ def create_collage(imgs, size):
                     j*imgs[0].shape[1]:(j+1)*imgs[0].shape[1], :] = imgs[idx]
     return collage
 
-def create_square_subplots(n_subplots, subplot_size):
+def create_square_subplots(n_subplots: int, subplot_size: tuple):
     n_rows = int(np.sqrt(n_subplots))
     n_cols = int(np.ceil(n_subplots / n_rows))
     fig, axes = plt.subplots(n_rows, n_cols, figsize=[n_cols*subplot_size, n_rows*subplot_size])
@@ -263,7 +263,7 @@ def create_square_subplots(n_subplots, subplot_size):
         fig.delaxes(axes[i])
     return fig, axes
 
-def load_dim_labels(roi):
+def load_dim_labels(roi: str):
     df_dim_labels = pd.read_csv(GROUP_DIR / "interpret" / "dim_labels.csv", delimiter=",")
     df_roi_labels = df_dim_labels[df_dim_labels["roi"] == roi]
     labels = list(df_roi_labels["label"])

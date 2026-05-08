@@ -5,7 +5,7 @@ from roidims.config import GROUP_DIR
 from roidims.utils import (
     SubjectLoader,
     compute_evar_all,
-    update_npz
+    update_npz,
 )
 
 # ------------------- Find consistent dims across subjects ------------------- #

@@ -68,9 +68,11 @@ class BiCrossValidation(BaseEstimator, TransformerMixin):
         return A, B, C, D
 
     def fit_bnmf(self, X: np.ndarray, k_step: int):
-        bnmf = nimfa.Bd(X, seed="random_c", rank=k_step, max_iter=1500, min_residuals=1e-5, alpha=np.zeros((X.shape[0], k_step)),
-                        beta=np.zeros((k_step, X.shape[1])), theta=.0, k=.0, sigma=1., skip=500, stride=5,
-                        n_w=np.zeros((k_step, 1)), n_h=np.zeros((k_step, 1)), n_run=1, n_sigma=False)
+        bnmf = nimfa.Bd(
+            X, seed="random_c", rank=k_step, max_iter=1500, min_residuals=1e-5, alpha=np.zeros((X.shape[0], k_step)),
+            beta=np.zeros((k_step, X.shape[1])), theta=.0, k=.0, sigma=1., skip=500, stride=5,
+            n_w=np.zeros((k_step, 1)), n_h=np.zeros((k_step, 1)), n_run=1, n_sigma=False
+        )
         bnmf_fit = bnmf()
         W = bnmf_fit.basis()
         H = bnmf_fit.coef()
@@ -95,8 +97,8 @@ class BiCrossValidation(BaseEstimator, TransformerMixin):
             train_errs[i] = train_rss
 
             # Predict A using B and C
-            W_B = np.dot(B, np.linalg.pinv(H_D)) # hat(W)_A in the paper
-            H_C = np.dot(np.linalg.pinv(W_D), C) # hat(H)_A in the paper
+            W_B = np.dot(B, np.linalg.pinv(H_D))
+            H_C = np.dot(np.linalg.pinv(W_D), C)
             A_hat = np.dot(W_B, H_C)
             test_rss = np.sum((A - A_hat) ** 2)
             test_errs[i] = test_rss

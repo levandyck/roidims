@@ -7,14 +7,16 @@ from roidims.utils import (
     SubjectLoader,
     submit_parallel_jobs,
     update_npz,
-    compute_evar_all
+    compute_evar_all,
 )
 
 # ------------------ Perform randomly initialized BNMF runs ------------------ #
 def fit_bnmf(V: np.ndarray, k_optim: int):
-    bnmf = nimfa.Bd(V, seed="random_c", rank=k_optim, max_iter=3000, min_residuals=1e-5, alpha=np.zeros((V.shape[0], k_optim)),
-                    beta=np.zeros((k_optim, V.shape[1])), theta=.0, k=.0, sigma=1., skip=1000, stride=5,
-                    n_w=np.zeros((k_optim, 1)), n_h=np.zeros((k_optim, 1)), n_run=1, n_sigma=False)
+    bnmf = nimfa.Bd(
+        V, seed="random_c", rank=k_optim, max_iter=3000, min_residuals=1e-5, alpha=np.zeros((V.shape[0], k_optim)),
+        beta=np.zeros((k_optim, V.shape[1])), theta=.0, k=.0, sigma=1., skip=1000, stride=5,
+        n_w=np.zeros((k_optim, 1)), n_h=np.zeros((k_optim, 1)), n_run=1, n_sigma=False
+    )
     bnmf_fit = bnmf()
     W = np.array(bnmf_fit.basis())
     H = np.array(bnmf_fit.coef())
@@ -101,7 +103,7 @@ def within_group_mean(sim_mat: np.ndarray, g: list):
     iu = np.triu_indices_from(block, k=1)
     return block[iu].mean() if iu[0].size else np.nan
 
-def compute_sim_dims_groups(subjects: list, rois: list, mean_center: bool=False):
+def compute_sim_dims_groups(subjects: list, rois: list, mean_center: bool=True):
     """Compute mean cosine similarity between two groups of dimensions."""
     sims = {roi: {"within_g1": [], "within_g2": [], "between": []} for roi in rois}
     for subj in subjects:

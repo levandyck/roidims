@@ -3,14 +3,13 @@ import numpy as np
 import pandas as pd
 import nibabel as nib
 import cortex
+from sklearn.metrics.pairwise import cosine_similarity
+
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, LinearSegmentedColormap
 import matplotlib.ticker as ticker
 import seaborn as sns
 from wordcloud import WordCloud
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.metrics.pairwise import cosine_similarity
 
 from roidims.config import SUBJ_DIR, GROUP_DIR, FIG_DIR
 from roidims.bipolar import hotcold # https://github.com/endolith/bipolar-colormap
@@ -22,7 +21,7 @@ from roidims.utils import (
     truncate_cmap,
     cmap_thresh_div,
     zoom_to_roi_combined,
-    hoyer_sparseness
+    hoyer_sparseness,
 )
 
 # ------------------------------ Global settings ----------------------------- #
@@ -853,73 +852,54 @@ def suppfig_noiseceilings(subjects: list, rois: list, sign_vox: bool=False):
     fig.savefig(FIG_DIR / "suppfig_noiseceilings.pdf", dpi=300)
     plt.show()
 
-def suppfig_flatmaps_encoding_betas_pca(subject: str, rois: list):
-    """Plot flatmaps of PCs based on tuning maps for all dimensions."""
-    fig, axes = plt.subplots(1, len(rois), figsize=[len(rois)*6*CM2IN, 1*6*CM2IN], squeeze=False)
-    for r, roi in enumerate(rois):
-        betas = nib.load(SUBJ_DIR / subject / "encoding" / f"betas_{subject}_{roi}.nii.gz").get_fdata()
-        pvals_corr = nib.load(SUBJ_DIR / subject / "encoding" / f"pvals_corr_{subject}_{roi}.nii.gz").get_fdata()
 
-        # Perform PCA
-        x, y, z, d = betas.shape
-        betas_z = StandardScaler().fit_transform(betas.reshape(-1, d))
-        betas_pca = PCA(n_components=3).fit_transform(betas_z).reshape(x, y, z, 3)
-        betas_pca_norm = MinMaxScaler().fit_transform(betas_pca.reshape(-1, 1)).reshape(betas_pca.shape)*255
+# ----------------------------- DIAGNOSTIC CHECKS ---------------------------- #
+def plot_ncsnr_distribution(ax, ncsnr_roi, threshold, bins=100):
+    """Plot distribution of NCSNR values and percentile threshold."""
+    ax.hist(ncsnr_roi, bins=bins, color="purple", alpha=0.3, label="NCSNR")
+    ax.axvline(threshold, color="red", linestyle="--", linewidth=1.5, label=f"Threshold ({threshold:.4f})")
+    ax.set_xlabel("NCSNR")
+    ax.set_ylabel("Frequency")
+    ax.set_box_aspect(1)
+    ax.legend()
 
-        # Create RGBA volume
-        red = cortex.Volume(betas_pca_norm[:, :, :, 0].swapaxes(0, -1).astype(np.uint8), subject, "auto-align")
-        green = cortex.Volume(betas_pca_norm[:, :, :, 1].swapaxes(0, -1).astype(np.uint8), subject, "auto-align")
-        blue = cortex.Volume(betas_pca_norm[:, :, :, 2].swapaxes(0, -1).astype(np.uint8), subject, "auto-align")
-        alpha = np.full_like(betas_pca_norm[:, :, :, 0], 255)
-        alpha = np.where(pvals_corr < 0.01, alpha, 0)
-        rgba_volume = cortex.VolumeRGB(red,
-                                        green,
-                                        blue,
-                                        subject,
-                                        alpha=alpha.swapaxes(0, -1),
-                                        shared_vmin=0,
-                                        shared_vmax=255)
+def plot_shift_distribution(ax, resp_train, resp_train_shift, resp_test, resp_test_shift, bins=100):
+    """Plot histograms of original and baseline-shifted responses for train and test sets."""
+    ax.hist(resp_train.flatten(), bins=bins, color="lightgreen", alpha=0.3, label="Train orig")
+    ax.axvline(resp_train.flatten().min(), color="lightgreen", alpha=0.6, label="Train orig min")
+    ax.hist(resp_train_shift.flatten(), bins=bins, color="green", alpha=0.3, label="Train shift")
+    ax.axvline(resp_train_shift.flatten().min(), linestyle="--", color="green", alpha=0.6, label="Train shift min")
 
-        # Create flatmap
-        ax = axes.flatten()[r]
-        fig = cortex.quickflat.make_figure(rgba_volume,
-                                            pixelwise=True,
-                                            with_curvature=True,
-                                            with_sulci=False,
-                                            with_rois=False,
-                                            with_labels=True,
-                                            colorbar_location="left",
-                                            dpi=600,
-                                            fig=ax)
+    ax.hist(resp_test.flatten(), bins=bins, color="lightblue", alpha=0.3, label="Test orig")
+    ax.axvline(resp_test.flatten().min(), color="lightblue", alpha=0.6, label="Test orig min")
+    ax.hist(resp_test_shift.flatten(), bins=bins, color="blue", alpha=0.3, label="Test shift")
+    ax.axvline(resp_test_shift.flatten().min(), linestyle="--", color="blue", alpha=0.6, label="Test shift min")
 
-        # Add other ROIs
-        roi_list = ["FFA", "PPA", "EBA", "OFA", "aTL-faces", "OPA", "RSC", "FBA", "EVC"]
-        for roi_ in roi_list:
-            if roi_ != roi:
-                target_color = ROI_COLORS.get(roi_, "white")
-                _ = cortex.quickflat.composite.add_rois(fig,
-                                                        rgba_volume,
-                                                        roi_list=[roi_],
-                                                        with_labels=True,
-                                                        linewidth=6,
-                                                        linecolor=target_color,
-                                                        labelcolor="white",
-                                                        labelsize=35)
+    ax.set_xlabel("Values")
+    ax.set_ylabel("Frequency")
+    ax.set_box_aspect(1)
+    ax.legend()
 
-        # Add seed ROI
-        seed_color = ROI_COLORS.get(roi, "white")
-        _ = cortex.quickflat.composite.add_rois(fig,
-                                                rgba_volume,
-                                                roi_list=[roi],
-                                                with_labels=True,
-                                                linewidth=8,
-                                                linecolor=seed_color,
-                                                labelcolor="white",
-                                                labelsize=35)
+def plot_minima_distribution(ax, resp_train, resp_train_shift, resp_test, resp_test_shift, bins=100):
+    """Plot histograms of voxel-wise minima for original and shifted responses."""
+    minima_train = resp_train.min(axis=0)
+    ax.hist(minima_train, bins=bins, color="lightgreen", alpha=0.3, label="Train orig")
+    ax.axvline(minima_train.min(), color="lightgreen", alpha=0.6, label="Train orig glob min")
 
-        zoom_to_roi_combined(subject, roi="zoom")
-        ax.set_box_aspect(1)
-        ax.set_title(roi, fontsize=8, y=0.9)
+    minima_train_shift = resp_train_shift.min(axis=0)
+    ax.hist(minima_train_shift, bins=bins, color="green", alpha=0.3, label="Train shift")
+    ax.axvline(minima_train_shift.min(), linestyle="--", color="green", alpha=0.6, label="Train shift glob min")
 
-    plt.tight_layout(pad=0.5, w_pad=0.5, h_pad=0.5)
-    plt.savefig(SUBJ_DIR / subject / "flatmaps" / "betas" / f"flatmap_{subject}_betas_pca.pdf", dpi=600)
+    minima_test = resp_test.min(axis=0)
+    ax.hist(minima_test, bins=bins, color="lightblue", alpha=0.3, label="Test orig")
+    ax.axvline(minima_test.min(), color="lightblue", alpha=0.6, label="Test orig glob min")
+
+    minima_test_shift = resp_test_shift.min(axis=0)
+    ax.hist(minima_test_shift, bins=bins, color="blue", alpha=0.3, label="Test shifted")
+    ax.axvline(minima_test_shift.min(), linestyle="--", color="blue", alpha=0.6, label="Test shifted glob min")
+
+    ax.set_xlabel("Minima")
+    ax.set_ylabel("Frequency")
+    ax.set_ylim((0, 100))
+    ax.set_box_aspect(1)
+    ax.legend()

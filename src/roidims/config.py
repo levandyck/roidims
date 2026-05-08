@@ -1,7 +1,9 @@
 from pathlib import Path
 
-ROOT_DIR = Path("/home/levandyck/roidims/NSD/fmri/")
-DATA_DIR = ROOT_DIR / "data"
-SUBJ_DIR = DATA_DIR / "subjects"
-GROUP_DIR = DATA_DIR / "group"
-FIG_DIR = ROOT_DIR / "figs"
+HOME_DIR = Path("/home/levandyck/roidims/NSD/fmri/")
+FIG_DIR = HOME_DIR / "figs"
+
+DATA_DIR = Path("/raid/levandyck/")
+PROJ_DIR = DATA_DIR / "projects" / "roidims"
+SUBJ_DIR = PROJ_DIR / "subjects"
+GROUP_DIR = PROJ_DIR / "group"

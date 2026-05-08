@@ -12,7 +12,7 @@ from roidims.utils import (
     SubjectLoader,
     VolumeConverter,
     load_resp_h5_lowmem,
-    hoyer_sparseness
+    hoyer_sparseness,
 )
 
 # ------------------ Voxel-wise fractional ridge regression ------------------ #

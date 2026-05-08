@@ -19,7 +19,7 @@ def load_clip():
     model.eval()
     return model, preprocess, device
 
-def get_clip_img_embeds(subjects: list, batch_size=64):
+def get_clip_img_embeds(subjects: list, batch_size: int=64):
     """Encode images of each subject in CLIP."""
     model, preprocess, device = load_clip()
 

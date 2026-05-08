@@ -4,7 +4,8 @@ from roidims.bcv import BiCrossValidation
 from roidims.utils import SubjectLoader
 
 # ---------------------- Estimate optimal dimensionality --------------------- #
-def run_bcv(subjects: list, rois: list, k_min: int, k_max: int, k_steps: int, n_perms: int):
+def run_bcv(subjects: list, rois: list, k_min: int=1, k_max: int=100,
+            k_steps: int=1, n_perms: int=5):
     """Estimate optimal dimensionality using bi-cross-validation."""
     for subject in subjects:
         sub = SubjectLoader(subject)
