@@ -1,6 +1,6 @@
 # Multidimensional feature tuning in category‑selective areas of human visual cortex
 
-This repository contains analysis code for the paper "Multidimensional feature tuning in category‑selective areas of human visual cortex" by Leonard E. van Dyck, Martin N. Hebart*, and Katharina Dobs* (*equal contribution).
+This repository contains analysis code for the paper "[Multidimensional feature tuning in category‑selective areas of human visual cortex](https://doi.org/10.1523/JNEUROSCI.0038-26.2026)" by Leonard E. van Dyck, Martin N. Hebart*, and Katharina Dobs* (*equal contribution).
 
 ## Installation
 ```
