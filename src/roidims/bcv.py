@@ -1,3 +1,7 @@
+# ---------------------------------------------------------------------------- #
+# This code was originally written and kindly shared by Florian P. Mahner
+# (https://florianmahner.com/).
+# ---------------------------------------------------------------------------- #
 import numpy as np
 import nimfa
 from sklearn.base import BaseEstimator, TransformerMixin
